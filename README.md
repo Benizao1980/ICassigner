@@ -1,6 +1,6 @@
 # ICassigner
 
-**ICassigner** is a small, conservative utility for assigning *Acinetobacter baumannii* international clones (ICs) using a core genome phylogeny.
+**`ICassigner`** is a small, conservative utility for assigning *Acinetobacter baumannii* international clones (ICs) using a core genome phylogeny.
 
 It is designed for situations where:
 - ICs are widely used as a shorthand for lineage,
@@ -12,11 +12,11 @@ The aim is not to force assignments, but to **reduce obvious under-labelling whi
 
 ---
 
-## What ICassigner does (and does not do)
+## What `ICassigner` does (and does not do)
 
 **It does:**
 - keep all existing IC labels unchanged
-- use the core genome tree as the primary lineage definition
+- use the core genome tree as the primary lineage framework
 - assign ICs only when there is strong local phylogenetic support
 - leave ambiguous isolates as `UA` by design
 - provide cross-checks against MLST and clustering-based structure
@@ -26,6 +26,8 @@ The aim is not to force assignments, but to **reduce obvious under-labelling whi
 - override expert-curated IC labels
 - use MLST to drive assignment
 - attempt to classify borderline or recombinant isolates
+
+`ICassigner` requires a seed set of previously labelled international clones and does not attempt de novo IC discovery. Extension to reference-panel–based or MLST-seeded workflows is left for future development.
 
 ---
 
@@ -41,9 +43,7 @@ If you want plots (`--plots`):
 python -m pip install matplotlib numpy
 ```
 
----
-Inputs
----
+## Inputs
 
 ### Core genome tree (Newick)
 
@@ -58,6 +58,7 @@ Acinetobacter-coreML.nwk
 Must contain:
 - a sample ID column (matching tree tips)
 - an IC column with known labels or `UA`
+(column names may contain spaces; "quote" them on the command line if needed)
 
 Optional but recommended:
 - Oxford MLST
@@ -87,9 +88,19 @@ python ICassigner.py \
   --outdir outputs_icassigner
 ```
 
+### Minimal example without plots
+
+```bash
+python ICassigner.py \
+  --tree Acinetobacter-coreML.nwk \
+  --metadata metadata.csv \
+  --tip_col sample_id \
+  --ic_col IC
+```
+
 ## How IC assignment works
 
-For isolates labelled UA, ICassigner walks up the phylogeny from the tip to the root and identifies the smallest ancestral clade that:
+For isolates labelled `UA`, `ICassigner` walks up the phylogeny from the tip towards the root and identifies the smallest ancestral clade that:
 - contains at least 10 isolates with known IC labels, and
 - where ≥90% of those labels agree on the same IC.
 
@@ -103,7 +114,9 @@ Outputs
 ---
 
 Main output table
-`metadata_with_conservative_IC_enriched.csv`
+```
+metadata_with_conservative_IC_enriched.csv
+```
 
 Adds the following columns:
 
@@ -126,7 +139,7 @@ Example interpretation of outputs
 ![IC counts before-v-after](example/IC_counts_before_after.png)
 
 **Fig. 1:** This plot shows that conservative inference:
-- substantially reduces UA labels,
+- substantially reduces `UA` labels,
 - does not inflate dominant clones (e.g. IC2 remains unchanged),
 - primarily resolves structured but under-labelled lineages (e.g. IC7).
 
@@ -142,12 +155,12 @@ Example interpretation of outputs
 ### hBAPS vs tree-assigned IC
 ![hBAPS-v-tree assigned ICs](example/confusion_hBAPS_vs_assignedIC.png)
 
-**Fig. 3:** hBAPS clusters show near one-to-one correspondence with inferred ICs, providing independent, unsupervised support for ICassigner assignments.
+**Fig. 3:** hBAPS clusters show near one-to-one correspondence with inferred ICs, providing independent, unsupervised support for `ICassigner` assignments.
 
 ### Support diagnostics
 ![majority support proportion](example/IC_inference_prop_hist.png)
 
-**Fig. 4:** Histogram showing the proporation of support for each new assignemnt. 
+**Fig. 4:** Histogram showing the proportion of support for each new assignment. 
 
 ![neighbour support](example/IC_inference_support_hist.png)
 
@@ -157,7 +170,7 @@ Example interpretation of outputs
 
 **Notes on interpretation**
 
-*ICassigner should be viewed as a harmonisation tool, not a lineage discovery method.
+*`ICassigner` should be viewed as a harmonisation tool, not a lineage discovery method.
 Remaining UA isolates should be interpreted as unresolved, not misclassified.*
 
 ### Adjusting stringency (optional)
@@ -174,8 +187,54 @@ Slightly more permissive (exploratory analyses):
 --min_support 5 --min_prop 0.8
 ```
 
-## Suggested citation text (software)
+---
+What if I don't have labelled isolates?
+---
 
-International clone assignment was performed using **ICassigner.py**, a conservative phylogeny-guided IC propagation tool based on majority support within the core genome tree.  
+If you’ve got a new dataset with zero IC labels, `ICassigner` can’t “propagate” anything — you need a seed set of labelled isolates or another way to anchor lineages. Practically, you’ve got a couple of workable options, depending on what you have and how strict you want to be.
+
+### Option A: add a small labelled reference panel, then propagate
+
+This is the cleanest and most robust.
+
+**What you do**
+1. Add a curated set of reference genomes with known ICs (IC1–IC9; include a few per IC).
+2. Build a core genome tree of (new isolates + references).
+3. Run `ICassigner`: it will assign ICs to your new isolates based on where they land relative to the labelled references.
+
+**Why this is best**
+- ICs are effectively “phylogeny-defined” in practice
+- You get a defensible lineage anchor
+- Works even when MLST is missing/ambiguous
+
+**Minimum viable panel**
+- ~5–10 references per major IC (IC1, IC2, IC7 at least)
+- Fewer for rarer ICs, if you don’t expect them
+- Include a couple of “non-IC” or outgroup-ish *A. baumannii* to avoid weird rooting artefacts
+
+### Option B: infer ICs from MLST mapping (Oxford/Pasteur) then treat as provisional seeds
+
+Yes — if you have assemblies, you can assign Oxford + Pasteur MLST, then map ST → expected IC, and use that to seed `ICassigner`.
+
+**Workflow**
+1. Run MLST calling from assemblies:
+- `mlst` (Torsten Seemann) can call Oxford/Pasteur schemes quickly
+- or use `PubMLST`/`BIGSdb` outputs if you already have them
+2. Map STs to ICs (Oxford and Pasteur each have commonly used ST↔IC associations).
+3. Seed IC labels where mapping is high-confidence (e.g., ST208/IC2 etc.)
+4. Build a tree and use `ICassigner` to:
+- fill in the rest conservatively
+- flag conflicts (useful QC)
+
+**Caveat**
+MLST is not always one-to-one with ICs, and schemes differ. That’s why I’d label these as:
+- IC_seed_from_MLST (provisional)
+- IC_tree_conservative (final)
+
+---
+Suggested citation text (software)
+---
+
+International clone assignment was performed using **`ICassigner`**, a conservative phylogeny-guided IC propagation tool based on majority support within the core genome tree.  
 
 First described in *Pascoe & Mourkas et al.* (in preparation).
