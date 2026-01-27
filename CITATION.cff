@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+title: ICassigner
+message: >
+  If you use this software, please cite it using the metadata below.
+type: software
+authors:
+  - family-names: Pascoe
+    given-names: Ben
+  - family-names: Mourkas
+    given-names: Evangelos
+repository-code: https://github.com/Benizao1980/ICassigner
+abstract: >
+  ICassigner is a conservative, phylogeny-guided utility for harmonising
+  international clone (IC) designations in Acinetobacter baumannii using
+  core genome phylogenies.
+license: MIT
+keywords:
+  - Acinetobacter baumannii
+  - international clones
+  - phylogenomics
+  - antimicrobial resistance
+  - bacterial population structure
+version: 0.1.0
+date-released: 2026-01-27
