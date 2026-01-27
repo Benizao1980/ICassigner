@@ -43,6 +43,19 @@ If you want plots (`--plots`):
 python -m pip install matplotlib numpy
 ```
 
+Install all dependencies with:
+```bash
+pip install -r requirements.txt
+```
+
+## Testing
+
+A simple smoke test is provided to ensure ICassigner runs end-to-end on example data:
+
+```bash
+pytest tests/test_smoke.py
+```
+
 ## Inputs
 
 ### Core genome tree (Newick)
