@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ICassigner.py (pandas-free)
+ICassigner.py v0.1.0
 
 Conservative phylogeny-guided assignment of Acinetobacter baumannii
 International Clones (ICs) using a core genome tree and a metadata CSV.
@@ -23,8 +23,8 @@ Dependencies
 - numpy (optional; only needed if --plots)
 
 Example
-python ICassigner.py --tree RAxML-result.Acinetobacter-coreML.nwk \
-  --metadata FullMicroreactWyr-with-Russian-Metadata.csv \
+python ICassigner.py --tree Acinetobacter-coreML.nwk \
+  --metadata metadata.csv \
   --tip_col sample_id --ic_col IC \
   --plots --outdir outputs_icassigner \
   --pasteur_st_col ST_Pasteur --oxford_st_col ST_Oxford \
