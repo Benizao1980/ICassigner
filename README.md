@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="icassigner_logo_suite_phylogeny.svg" width="360" alt="ICassigner logo">
+</p>
+
 # ICassigner
 
 **`ICassigner`** is a small, conservative utility for assigning *Acinetobacter baumannii* international clones (ICs) using a core genome phylogeny.
